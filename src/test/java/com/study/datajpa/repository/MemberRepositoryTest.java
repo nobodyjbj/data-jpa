@@ -135,7 +135,7 @@ class MemberRepositoryTest {
 
         List<Member> members = memberRepository.findByUsername("AAA"); // 데이터가 없으면 null이 아니라 empty 컬렉션을 반환한다.
         Member member = memberRepository.findMemberByUsername("AAA"); // 데이터가 없으면 null을 반환한다.
-        Optional<Member> aaa = memberRepository.findOptionalByUsername("AAA");
+        Optional<Member> aaa = memberRepository.findOptionalByUsername("AAA"); // 한개이상이 조회되면 NonUniqueResultException이 발생
 
         System.out.println("member = " + member);
     }
