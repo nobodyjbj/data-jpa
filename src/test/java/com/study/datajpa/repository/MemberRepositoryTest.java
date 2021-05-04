@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,7 @@ class MemberRepositoryTest {
 
     @Autowired MemberRepository memberRepository;
     @Autowired TeamRepository teamRepository;
+    @Autowired EntityManager em;
 
     @Test
     public void testMember() {
@@ -220,5 +222,28 @@ class MemberRepositoryTest {
         assertThat(page.getNumber()).isEqualTo(0);
         assertThat(page.isFirst()).isTrue();
         assertThat(page.hasNext()).isTrue();
+    }
+
+    @Test
+    public void bulkUpdate() {
+        // given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 15));
+        memberRepository.save(new Member("member3", 15));
+        memberRepository.save(new Member("member4", 20));
+        memberRepository.save(new Member("member5", 30));
+
+        // when
+        int resultCount = memberRepository.bulkAgePlus(20);
+        // 벌크연산 이후에는 모든 영속성 컨텍스트를 날려야 한다. 왜냐하면 벌크연산과 영속선 컨텍스트의 연산이 전혀 다르게 작동되기 때문이다.
+//        em.clear();
+
+        List<Member> member5 = memberRepository.findByUsername("member5");
+        Member member = member5.get(0);
+
+        assertThat(member.getAge()).isEqualTo(31);
+
+        // then
+        assertThat(resultCount).isEqualTo(2);
     }
 }
