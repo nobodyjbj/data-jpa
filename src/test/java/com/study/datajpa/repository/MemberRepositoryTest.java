@@ -246,4 +246,95 @@ class MemberRepositoryTest {
         // then
         assertThat(resultCount).isEqualTo(2);
     }
+    
+    @Test
+    public void findMemberLazy() {
+        // given
+        // member1 -> teamA
+        // member2 -> teamB
+        
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+        
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+        
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 20, teamB);
+        
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+        
+        em.flush();
+        em.clear();
+        
+        // when
+        // 조회된 결과만큼 한번씩 더 쿼리가 추가로 나가는 문제 N+1 문제
+        // 예시 : members가 10명이 나오면 team.getName을 찾기위해 select team 쿼리가 추가로 10번 나가는 문제.
+        // 이유 : 여기서 team은 lazy로 설정되어 있기 때문에 가짜 proxy객체를 사용하기 때문에 member조회 후 team을 조회하게 된다.
+        // List<Member> members = memberRepository.findAll();
+        
+        // 해결하는 방법으로는 fetchJoin 이 있다., 한 번에 다 끌고 올 수 있다.
+        // 이런 방법을 사용하면 연관관계가 있는 객체를 proxy가 아닌 진짜 객체로 인식하여 join으로 데이터를 가져온다.
+        List<Member> members = memberRepository.findMemberFetchJoin();
+        
+        for (Member member : members) {
+            System.out.println("member = " + member.getUsername());
+            System.out.println("member.teamClass = " + member.getTeam().getClass());
+            System.out.println("member.team = " + member.getTeam().getName());
+        }
+    }
+    
+    @Test
+    public void
+    findMemberEntityGraph() {
+        // given
+        // member1 -> teamA
+        // member2 -> teamB
+        
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+        
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+        
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 20, teamB);
+        
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+        
+        em.flush();
+        em.clear();
+        
+        // when
+        // EntityGraph를 사용하면 내부적으로 FetchJoin을 사용하는 것과 다름 없다.
+        // 방법 1
+        List<Member> members1 = memberRepository.findAll();
+    
+        for (Member member : members1) {
+            System.out.println("member = " + member.getUsername());
+            System.out.println("member.teamClass = " + member.getTeam().getClass());
+            System.out.println("member.team = " + member.getTeam().getName());
+        }
+        
+        // 방법 2
+        List<Member> members2 = memberRepository.findMemberEntityGraph();
+    
+        for (Member member : members2) {
+            System.out.println("member = " + member.getUsername());
+            System.out.println("member.teamClass = " + member.getTeam().getClass());
+            System.out.println("member.team = " + member.getTeam().getName());
+        }
+        
+        // 방법 3
+        List<Member> members3 = memberRepository.findEntityGraphByUsername("member1");
+    
+        for (Member member : members3) {
+            System.out.println("member = " + member.getUsername());
+            System.out.println("member.teamClass = " + member.getTeam().getClass());
+            System.out.println("member.team = " + member.getTeam().getName());
+        }
+        
+    }
 }
