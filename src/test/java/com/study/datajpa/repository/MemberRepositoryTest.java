@@ -368,4 +368,12 @@ class MemberRepositoryTest {
         // 실시간 트래픽이 많은 경우에는 lock을 사용하는 경우는 권장하지 않는다.
         List<Member> findMember = memberRepository.findLockByUsername("member1");
     }
+    
+    @Test
+    public void callCustom () {
+        // MemberRepositoryCustom에 있는 쿼리를 사용할 수 있다.
+        // 구현체의 이름이 MemberRepository 와 이름이 맞아야 한다. 이름 : domain 명 + repository + impl
+        // custom이 있다고 해서 이 기능으로 모든 로직을 해결하기보다 핵심 비즈니스 로직이 아니라면 클래스를 분리하는 것이 더욱 현명한 방법이다.
+        List<Member> memberCustom = memberRepository.findMemberCustom();
+    }
 }
