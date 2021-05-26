@@ -337,4 +337,35 @@ class MemberRepositoryTest {
         }
         
     }
+    
+    @Test
+    public void queryHint() {
+        // given
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        em.flush(); // 디비와 동기화, 아직 영속성컨텍스트에 자료가 남아있음
+        em.clear(); // 영속성 컨텍스트의 자료를 모두 지움
+        
+        // when
+        // Redis없이 튜닝으로 극복할 수 있을때 사용하는 것이 좋다.
+        // 처음부터 모든 곳에 이러한 설정을 해주는 것은 비추천한다.
+        Member findMember = memberRepository.findReadOnlyByUsername("member1");
+        findMember.setUsername("member2");
+        
+        // 변경 감지 == 더티 체크
+        em.flush();
+    }
+    
+    @Test
+    public void lock() {
+        // given
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        em.flush(); // 디비와 동기화, 아직 영속성컨텍스트에 자료가 남아있음
+        em.clear(); // 영속성 컨텍스트의 자료를 모두 지움
+    
+        // when
+        // 실시간 트래픽이 많은 경우에는 lock을 사용하는 경우는 권장하지 않는다.
+        List<Member> findMember = memberRepository.findLockByUsername("member1");
+    }
 }
